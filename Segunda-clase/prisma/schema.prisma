@@ -5,18 +5,10 @@
 // Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
 
 generator client {
-  provider = "prisma-client-js"
+  provider = "prisma-client"
+  output   = "../generated/prisma"
 }
 
 datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
-}
-
-model Producto {
-  id  Int   @id @default(autoincrement())
-  nombre  String
-  descripcion String
-  precio  Float
-  stock Int
+  provider = "postgresql"
 }
