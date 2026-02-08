@@ -6,6 +6,7 @@
 
 generator client {
   provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
 }
 
 datasource db {
@@ -13,9 +14,9 @@ datasource db {
 }
 
 model Producto {
-  id  Int   @id @default(autoincrement())
-  nombre  String
+  id          Int     @id @default(autoincrement())
+  nombre      String
   descripcion String
-  precio  Float
-  stock Int
+  precio      Float
+  stock       Int
 }
