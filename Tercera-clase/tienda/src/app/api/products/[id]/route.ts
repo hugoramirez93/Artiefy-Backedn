@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 export const runtime = "nodejs";
 
 export async function DELETE(_req: Request, context: any) {
+  
   try {
     // ✅ soporta params como objeto o como Promise
     const params = await Promise.resolve(context.params);
