@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import { SignJWT } from "jose";
 import User from "@/models/users";
 
 const JWT_SECRET = process.env.JWT_SECRET || "clave secreta";
@@ -21,18 +21,20 @@ export async function POST(request: Request) {
 				{ status: 401 },
 			);
 		}
-		const token = jwt.sign(
-			{ userId: usuario._id, email: usuario.email },
-			JWT_SECRET,
-			{ expiresIn: "1h" },
-		);
 
-		const res = NextResponse.json(
-			{ token, message: "Login exitoso" },
+		// Generar token con jose
+		const token = await new SignJWT({
+			userId: usuario._id.toString(),
+			email: usuario.email,
+		})
+			.setProtectedHeader({ alg: "HS256" })
+			.setExpirationTime("1h")
+			.sign(new TextEncoder().encode(JWT_SECRET));
+
+		return NextResponse.json(
+			{ token, message: "Login exitoso", user: { email: usuario.email } },
 			{ status: 200 },
 		);
-		res.cookies.set("token", token, { httpOnly: true, secure: true, path: "/" });
-      return res;
 	} catch (error) {
 		console.error("Error en el login:", error);
 		return NextResponse.json(

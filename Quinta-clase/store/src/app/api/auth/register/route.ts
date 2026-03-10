@@ -1,33 +1,48 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/mongoose";
-import users from "@/models/users";
+import User, { userValidationSchema } from "@/models/users";
 import bcrypt from "bcryptjs";
-import { validateProductData } from "../../validacion/validator";
 
 export async function POST(request: NextRequest) {
 	await connectDB();
 	try {
 		const { username, email, password } = await request.json();
-		const existe = await users.findOne({ email });
+
+		// Validar con Zod
+		const validation = userValidationSchema.safeParse({
+			username,
+			email,
+			password,
+		});
+
+		if (!validation.success) {
+			return NextResponse.json(
+				{
+					message: "Datos inválidos",
+					errors: validation.error.issues.map((err) => ({
+						field: err.path.join("."),
+						message: err.message,
+					})),
+				},
+				{ status: 400 },
+			);
+		}
+
+		const existe = await User.findOne({ email: validation.data.email });
 		if (existe) {
 			return NextResponse.json(
 				{ message: "El correo ya está registrado" },
 				{ status: 400 },
 			);
 		}
-		const hashedPassword = await bcrypt.hash(password, 10);
-		const newUser = new users({
-			username,
-			email,
+
+		const hashedPassword = await bcrypt.hash(validation.data.password, 10);
+		const newUser = new User({
+			username: validation.data.username,
+			email: validation.data.email,
 			password: hashedPassword,
 		});
-		const isvalid = validateProductData(newUser);
-		if (!isvalid) {
-			return NextResponse.json(
-				{ message: "Datos de usuario no válidos" },
-				{ status: 400 },
-			);
-		}
+
 		await newUser.save();
 		return NextResponse.json(
 			{ message: "Usuario registrado exitosamente" },

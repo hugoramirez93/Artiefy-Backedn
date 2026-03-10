@@ -1,6 +1,7 @@
 import { connectDB } from "@/lib/mongoose";
 import User, { userValidationSchema } from "@/models/users";
 import { validateZodUser } from "@/app/api/validacion/validatorUserZod";
+import bcrypt from "bcryptjs";
 
 export const userController = {
 	// Crear un nuevo usuario
@@ -22,7 +23,15 @@ export const userController = {
 				};
 			}
 			await connectDB();
-			const newUser = await User.create(validation.data);
+			
+			// Hashear la contraseña
+			const hashedPassword = await bcrypt.hash(validation.data.password, 10);
+			const userDataWithHashedPassword = {
+				...validation.data,
+				password: hashedPassword,
+			};
+			
+			const newUser = await User.create(userDataWithHashedPassword);
 			return { success: true, data: newUser };
 		} catch (error) {
 			return {
@@ -72,7 +81,14 @@ export const userController = {
 	) {
 		try {
 			await connectDB();
-			const updatedUser = await User.findByIdAndUpdate(id, userData, {
+			const updateData = { ...userData };
+			
+			// Hashear la contraseña si se proporciona
+			if (updateData.password) {
+				updateData.password = await bcrypt.hash(updateData.password, 10);
+			}
+			
+			const updatedUser = await User.findByIdAndUpdate(id, updateData, {
 				new: true,
 				runValidators: true,
 			});
