@@ -42,22 +42,18 @@ export async function middleware(request: NextRequest) {
 				{ status: 401 },
 			);
 		}
-
 		const token = authHeader.split(" ")[1];
 		const payload = await verifyToken(token);
-
 		if (!payload) {
 			return NextResponse.json(
 				{ message: "Token no válido o expirado" },
 				{ status: 401 },
 			);
 		}
-
 		// Agregar información del usuario al request
 		const requestHeaders = new Headers(request.headers);
 		requestHeaders.set("userId", payload.userId as string);
 		requestHeaders.set("userEmail", payload.email as string);
-
 		return NextResponse.next({
 			request: {
 				headers: requestHeaders,
@@ -67,7 +63,6 @@ export async function middleware(request: NextRequest) {
 
 	return NextResponse.next();
 }
-
 export const config = {
 	matcher: ["/api/:path*"],
 };
